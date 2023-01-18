@@ -7,9 +7,7 @@ from kubernetes.client import ApiException
 class Kubernetes:
     def __init__(self):
         config.load_kube_config()
-        self.v1 = client.CoreV1Api()
         self.client = client
-        self.client.ApiClient = client.ApiClient()
 
     def get_apis(self):
         apis = []
@@ -21,7 +19,7 @@ class Kubernetes:
         apis_info = []
         for item in self.get_apis():
             path = f'/apis/{item}'
-            response = self.client.ApiClient.call_api(
+            response = self.client.ApiClient().call_api(
                 path,
                 'GET',
                 response_type='object'
@@ -38,9 +36,9 @@ class Kubernetes:
                     )
         return apis_info
 
-    def get_cr(self, apis, namespaced, namespace='default'):
+    def get_cr(self, namespaced, namespace='default'):
         crs = []
-        for item in apis:
+        for item in self.get_full_apis_info():
             if item['namespaced']:
                 if namespaced:
                     try:
@@ -91,10 +89,9 @@ def print_table(data, headers):
 
 def main():
     k = Kubernetes()
-    result = k.get_cr(k.get_full_apis_info(), False, 'default')
+    result = k.get_cr(False, 'default')
     print_table(result, headers=['name', 'kind', 'namespace'])
 
 
 if __name__ == '__main__':
     main()
-
